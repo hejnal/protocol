@@ -1,6 +1,6 @@
 name            protocol
-description     A newly-created dapp
-version         0.0.0
+description     Blockchain protocol for asset management
+version         0.3.2-alpha.5
 
-author          travis
-license         Apache-2.0
+author          Melonport
+license         GPL-3.0
