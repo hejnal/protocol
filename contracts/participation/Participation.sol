@@ -21,28 +21,6 @@ contract Participation is ParticipationInterface, DBC, Owned {
     // Function fields
     mapping (address => Information) public persona;
 
-    // NON-CONSTANT NON-BOOLEAN METHODS
-
-    function list(address x)
-        pre_cond(isOwner())
-    {
-        persona[x].isApproved = true;
-    }
-
-    function bulkList(address[] x)
-        pre_cond(isOwner())
-    {
-        for (uint i = 0; i < x.length; ++i) {
-            persona[x[i]].isApproved = true;
-        }
-    }
-
-    function delist(address x)
-        pre_cond(isOwner())
-    {
-        persona[x].isApproved = false;
-    }
-
     // CONSTANT METHODS
 
     /// @dev Pre: Request ID
@@ -70,4 +48,35 @@ contract Participation is ParticipationInterface, DBC, Owned {
     {
         return true;
     }
+
+    // NON-CONSTANT METHODS
+
+    function list(address x)
+        pre_cond(isOwner())
+    {
+        persona[x].isApproved = true;
+    }
+
+    function bulkList(address[] x)
+        pre_cond(isOwner())
+    {
+        for (uint i = 0; i < x.length; ++i) {
+            persona[x[i]].isApproved = true;
+        }
+    }
+
+    function delist(address x)
+        pre_cond(isOwner())
+    {
+        persona[x].isApproved = false;
+    }
+
+    function bulkDelist(address[] x)
+        pre_cond(isOwner())
+    {
+        for (uint i = 0; i < x.length; ++i) {
+            persona[x[i]].isApproved = false;
+        }
+    }
+
 }

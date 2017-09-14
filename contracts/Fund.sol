@@ -345,24 +345,34 @@ contract Fund is DBC, Owned, Shares, FundHistory, FundInterface, ExchangeAdapter
             numShares,
             offeredValue
         ))
-        returns(uint)
+        returns(uint id)
     {
         MELON_CONTRACT.transferFrom(msg.sender, this, offeredValue);
-        uint thisId = nextRequestId;
-        requests[thisId] = Request({
-            owner: msg.sender,
-            status: RequestStatus.open,
-            requestType: RequestType.subscribe,
-            numShares: numShares,
-            offeredOrRequestedValue: offeredValue,
-            incentive: incentiveValue,
-            lastFeedUpdateId: module.datafeed.getLastUpdateId(),
-            lastFeedUpdateTime: module.datafeed.getLastUpdateTimestamp(),
-            timestamp: now
-        });
-        SubscribeRequest(msg.sender, now, numShares);
+        id = nextRequestId;
+        Request memory info;
+        info.owner = msg.sender;
+        info.status = RequestStatus.open;
+        info.requestType = RequestType.subscribe;
+        info.numShares = numShares;
+        info.offeredOrRequestedValue = offeredValue;
+        info.incentive = incentiveValue;
+        info.lastFeedUpdateId = module.datafeed.getLastUpdateId();
+        info.lastFeedUpdateTime = module.datafeed.getLastUpdateTimestamp();
+        info.timestamp = now;
+        LogRequest(
+          info.owner,
+          info.status,
+          info.requestType,
+          info.numShares,
+          info.offeredOrRequestedValue,
+          info.incentive,
+          info.lastFeedUpdateId,
+          info.lastFeedUpdateTime,
+          info.timestamp
+        );
+        requests[id] = info;
+        SubscribeRequest(id, msg.sender, now, numShares);
         nextRequestId++;
-        return thisId;
     }
 
     /// @dev Pre: offeredValue denominated in [base unit of MELON_ASSET]
@@ -385,10 +395,10 @@ contract Fund is DBC, Owned, Shares, FundHistory, FundInterface, ExchangeAdapter
             numShares,
             requestedValue
         ))
-        returns (uint)
+        returns (uint id)
     {
-        uint thisId = nextRequestId;
-        requests[thisId] = Request({
+        id = nextRequestId;
+        requests[id] = Request({
             owner: msg.sender,
             status: RequestStatus.open,
             requestType: RequestType.redeem,
@@ -399,9 +409,8 @@ contract Fund is DBC, Owned, Shares, FundHistory, FundInterface, ExchangeAdapter
             lastFeedUpdateTime: module.datafeed.getLastUpdateTimestamp(),
             timestamp: now
         });
+        RedeemRequest(id, msg.sender, now, numShares);
         nextRequestId++;
-        RedeemRequest(msg.sender, now, numShares);
-        return thisId;
     }
 
     /// @dev Pre: Anyone can trigger this function; Id of request that is pending
