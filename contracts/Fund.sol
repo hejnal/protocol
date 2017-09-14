@@ -10,13 +10,14 @@ import './participation/ParticipationInterface.sol';
 import './datafeeds/DataFeedInterface.sol';
 import './riskmgmt/RiskMgmtInterface.sol';
 import './exchange/ExchangeInterface.sol';
+import './exchange/ExchangeAdapter.sol';
 import './FundInterface.sol';
 import './FundHistory.sol';
 
 /// @title Fund Contract
 /// @author Melonport AG <team@melonport.com>
 /// @notice Simple vault
-contract Fund is DBC, Owned, Shares, FundHistory, FundInterface {
+contract Fund is DBC, Owned, Shares, FundHistory, FundInterface, ExchangeAdapter {
     using safeMath for uint;
 
     // TYPES

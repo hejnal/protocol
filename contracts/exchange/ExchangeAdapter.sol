@@ -25,17 +25,23 @@ contract ExchangeAdapter is DBC, Owned, ExchangeInterface {
         internal
         returns (bool)
     {
-        return ERC20(ofAsset).transferFrom(msg.sender, this, quantity);
+        return ofAsset.delegatecall(
+            bytes4(sha3("transferFrom(address,address,uint256)")),
+            msg.sender, this, quantity
+        );
     }
 
     /// @dev Pre: Transferred tokens to this contract
     /// @dev Post Approved to spend tokens on EXCHANGE
-    function approveSpending(address ofAsset, uint quantity)
-        internal
-        returns (bool)
-    {
-        return ERC20(ofAsset).approve(address(EXCHANGE), quantity);
-    }
+//    function approveSpending(address ofAsset, uint quantity)
+//        internal
+//        returns (bool)
+//    {
+//        return ofAsset.delegatecall(
+//            bytes4(sha3("approve(address,uint256)")),
+//            EXCHANGE, quantity
+//        );
+//    }
 
     /// @dev Pre: Adapter needs to be approved to spend tokens on msg.senders behalf
     /// @dev Post Claimed quantitiy of asset and approved EXCHANGE to spend them
@@ -82,13 +88,7 @@ contract ExchangeAdapter is DBC, Owned, ExchangeInterface {
         external
         returns (uint id)
     {
-        claimAndApprove(sellAsset, sellQuantity);
-        id = EXCHANGE.offer(
-            sellQuantity,
-            ERC20(sellAsset),
-            buyQuantity,
-            ERC20(buyAsset)
-        );
+        EXCHANGE.offer(sellQuantity, ERC20(sellAsset), buyQuantity, ERC20(buyAsset));
         OrderUpdated(id);
     }
 
@@ -96,9 +96,11 @@ contract ExchangeAdapter is DBC, Owned, ExchangeInterface {
         external
         returns (bool success)
     {
-        var (sellAsset, , sellQuantity, ) = getOrder(id);
-        claimAndApprove(sellAsset, sellQuantity);
-        success = EXCHANGE.buy(id, quantity);
+        var (sellAsset, buyAsset, sellQuantity, buyQuantity) = getOrder(id);
+        EXCHANGE.getOwner(id);
+        EXCHANGE.buy(id, quantity);
+        //require(ERC20(buyAsset).transfer(orderOwner, quantity));
+        require(ERC20(sellAsset).transfer(msg.sender, quantity));
         OrderUpdated(id);
     }
 
@@ -106,7 +108,7 @@ contract ExchangeAdapter is DBC, Owned, ExchangeInterface {
         external
         returns (bool success)
     {
-        success = EXCHANGE.cancel(id);
+        EXCHANGE.cancel(id);
         OrderUpdated(id);
     }
 }
