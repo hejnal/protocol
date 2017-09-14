@@ -1,7 +1,7 @@
-const SimpleMarket = artifacts.require('SimpleMarket');
 const ExchangeAdapter = artifacts.require('ExchangeAdapter');
 const EtherToken = artifacts.require('EtherToken');
 const PreminedAsset = artifacts.require('PreminedAsset');
+const SimpleMarket = artifacts.require('SimpleMarket');
 const chai = require('chai');
 
 const assert = chai.assert;
@@ -79,10 +79,10 @@ contract('SimpleMarket', (accounts) => {
         before('Setup order', async () => {
           pre.taker.mln = await mlnToken.balanceOf(taker);
           pre.taker.eth = await ethToken.balanceOf(taker);
-          pre.buyr.mln = await mlnToken.balanceOf(maker);
+          pre.maker.mln = await mlnToken.balanceOf(maker);
           pre.maker.eth = await ethToken.balanceOf(maker);
           await mlnToken.approve(market.address, test.makeAmt, { from: maker });
-          await market.takeOrder(
+          await market.makeOrder(
             mlnToken.address, ethToken.address, test.makeAmt, test.makeAmt, { from: maker },
           );
         });
@@ -93,7 +93,7 @@ contract('SimpleMarket', (accounts) => {
           await ethToken.approve(market.address, test.takeAmt, { from: taker });
           if (test.cond === '>') {
             try {
-              await market.take(oid, test.takeAmt, { from: taker })
+              await market.takeOrder(oid, test.takeAmt, { from: taker })
               assert(false, 'No error thrown');
             } catch (e) {
               const e1 = e.message.indexOf('invalid opcode') !== -1;
@@ -102,7 +102,7 @@ contract('SimpleMarket', (accounts) => {
               else assert(true);
             }
           } else {
-            await market.take(oid, test.takeAmt, { from: taker })
+            await market.takeOrder(oid, test.takeAmt, { from: taker })
           }
         });
 
