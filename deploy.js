@@ -32,7 +32,7 @@ function deployContract(name, args) {
   const abi = JSON.parse(fs.readFileSync(path.join(abiDir, name + '.abi'), 'utf8'));
   const bytecode = fs.readFileSync(path.join(abiDir, name + '.bin'), 'utf8');
   const contract = api.newContract(abi);
-  debugger; //XXX: below line will throw until paritytech/parity#6540 is resolved
+  //XXX: below line will throw until paritytech/parity#6540 is resolved
   return contract.deploy({data: bytecode}, args);
 }
 
