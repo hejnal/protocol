@@ -9,22 +9,15 @@
 //then:
 // modify the artifacts file
 
-const path = require('path');
+const artifactor = require('./artifactor.js');
 const fs = require('fs');
+const path = require('path');
 const tokenInfo = require('./migrations/config/token_info.js');
 const Api = require('@parity/parity.js').Api;
 const transport = new Api.Transport.Http('http://localhost:8545');
 const api = new Api(transport);
 
 const abiDir = path.join(__dirname, 'out');
-const artifactHandle = path.join(__dirname, 'artifacts.json');
-
-
-function loadArtifacts() {
-  if(fs.existsSync(artifactHandle))
-    return JSON.parse(fs.readFileSync(artifactHandle))
-  else return {};
-}
 
 // contract name and filename needs to have same case-sensitive name
 function deployContract(name, args) {
@@ -37,7 +30,7 @@ function deployContract(name, args) {
 }
 
 function main() {
-  let artifacts = loadArtifacts();
+  let artifacts = artifactor.load();
   const mlnAddr = tokenInfo['kovan'].find(t => t.symbol === 'MLN-T').address;
   deployContract('datafeeds/DataFeed', [mlnAddr, 120, 60])
   .then(address => {artifacts.kovan['DataFeed'] = address})
@@ -58,7 +51,9 @@ function main() {
   .then(() => deployContract('libraries/rewards'))
   .then(address => {artifacts.kovan['rewards'] = address})
   // TODO: link libraries with Vault and Version
-  .then(() => fs.writeFileSync(artifactHandle, JSON.stringify(artifacts)))
+  .then(() => artifactor.save(artifacts))
 }
 
-main();
+if(require.main === module) {
+  main();
+}

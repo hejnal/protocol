@@ -9,6 +9,7 @@ package-lock.json
 build/
 protocol/
 out/
+artifacts.json
 
 # ignore generated coverage data
 coverage.json
