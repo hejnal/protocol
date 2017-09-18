@@ -41,6 +41,23 @@ function main() {
   const mlnAddr = tokenInfo['kovan'].find(t => t.symbol === 'MLN-T').address;
   deployContract('datafeeds/DataFeed', [mlnAddr, 120, 60])
   .then(address => {artifacts.kovan['DataFeed'] = address})
+  .then(() => deployContract('exchange/SimpleMarket'))
+  .then(address => {artifacts.kovan['SimpleMarket'] = address})
+  .then(() => deployContract('sphere/Sphere', [artifacts.kovan.DataFeed, artifacts.kovan.SimpleMarket]))
+  .then(address => {artifacts.kovan['Sphere'] = address})
+  .then(() => deployContract('participation/Participation'))
+  .then(address => {artifacts.kovan['Participation'] = address})
+  .then(() => deployContract('riskmgmt/RMMakeOrders'))
+  .then(address => {artifacts.kovan['RMMakeOrders'] = address})
+  .then(() => deployContract('governance/Governance'))
+  .then(address => {artifacts.kovan['Governance'] = address})
+  .then(() => deployContract('libraries/calculate'))
+  .then(address => {artifacts.kovan['calculate'] = address})
+  .then(() => deployContract('libraries/rewards'))
+  .then(address => {artifacts.kovan['rewards'] = address})
+  .then(() => deployContract('libraries/rewards'))
+  .then(address => {artifacts.kovan['rewards'] = address})
+  // TODO: link libraries with Vault and Version
   .then(() => fs.writeFileSync(artifactHandle, JSON.stringify(artifacts)))
 }
 
