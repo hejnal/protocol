@@ -11,27 +11,60 @@
 
 const artifactor = require('./artifactor.js');
 const fs = require('fs');
+const klawSync = require('klaw-sync');
 const path = require('path');
+const solc = require('solc');
 const tokenInfo = require('./migrations/config/token_info.js');
 const Api = require('@parity/parity.js').Api;
 const transport = new Api.Transport.Http('http://localhost:8545');
 const api = new Api(transport);
 
-const abiDir = path.join(__dirname, 'out');
+const outDir = path.join(__dirname, 'out');
+const NETWORK = 'kovan';
+
+// returns path to the contract file defined by regexp
+// TODO: watch for case where Dapp outputs files in weird subdirs (is it possible to catch?)
+function getFileContent(regexp){
+  const filePath = klawSync(outDir, {filter: f => f.path.match(regexp)})[0];
+  return fs.readFileSync(filePath, 'utf8');
+}
+
+// returns string
+function getBytecode(contract) {
+  const re = new RegExp(`.*${contract}\.bin$`);
+  return getFileContent(re);
+}
+
+// returns Object
+function getAbi(contract) {
+  const re = new RegExp(`.*${contract}\.abi$`);
+  return JSON.parse(getFileContent(re));
+}
 
 // contract name and filename needs to have same case-sensitive name
 function deployContract(name, args) {
-  if(args === undefined) args = []; //TODO: make below line find in subdirs as well
-  const abi = JSON.parse(fs.readFileSync(path.join(abiDir, name + '.abi'), 'utf8'));
-  const bytecode = fs.readFileSync(path.join(abiDir, name + '.bin'), 'utf8');
+  if(args === undefined) args = [];
+  const abi = getAbi(name);
+  const bytecode = getBytecode(name);
   const contract = api.newContract(abi);
-  //XXX: below line will throw until paritytech/parity#6540 is resolved
   return contract.deploy({data: bytecode}, args);
+}
+
+//XXX: link using this until dapp does it by default (dapphub/dapp#55)
+function link(fromContract, toContract) {
+  const addr = artifactor.getArtifact('rewards', NETWORK);
+  let bytecode = getBytecode(fromContract);
+  const libs = {};
+  libs[toContract] = addr;
+  bytecode = solc.linkBytecode(bytecode, libs);
+  console.log(bytecode);
 }
 
 function main() {
   let artifacts = artifactor.load();
-  const mlnAddr = tokenInfo['kovan'].find(t => t.symbol === 'MLN-T').address;
+  const mlnAddr = tokenInfo[NETWORK].find(t => t.symbol === 'MLN-T').address;
+  link('Vault', 'rewards');
+  return;
   deployContract('datafeeds/DataFeed', [mlnAddr, 120, 60])
   .then(address => {artifacts.kovan['DataFeed'] = address})
   .then(() => deployContract('exchange/SimpleMarket'))

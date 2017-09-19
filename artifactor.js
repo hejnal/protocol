@@ -26,14 +26,14 @@ function save(artifacts) {
 }
 
 // retrieve a contract's artifact object from loaded artifacts
-function retrieveArtifact(name, network) {
+function getArtifact(name, network) {
   if(typeof artifacts !== 'object') artifacts = load();
   return artifacts[network][name];
 }
 
 // retrieve a parity.js contract abstraction connected to a deployed contract
-function retrieveContract(name, network) {
-  const addr = retrieveArtifact(name, network);
+function getContract(name, network) {
+  const addr = getArtifact(name, network);
   const abi = fs.readFileSync(path.join(abiDir, name + '.abi'));
   return api.newContract(abi, addr);
 }
@@ -41,6 +41,6 @@ function retrieveContract(name, network) {
 module.exports = {
   load,
   save,
-  retrieveArtifact,
-  retrieveContract
+  getArtifact,
+  getContract
 }
