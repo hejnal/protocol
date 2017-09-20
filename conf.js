@@ -1,5 +1,5 @@
 module.exports = {
-  network: 'KOVAN',
+  network: 'kovan',
   artifacts: './artifacts.json',
   output: './out/'
 }
