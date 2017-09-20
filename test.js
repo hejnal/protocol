@@ -15,6 +15,6 @@ describe('Assets', () => {
   });
 
   it.skip('Should have correct amount of premined tokens', async () => {
-    assert.equal(await mlnToken.balanceOf(accounts[0]), PREMINED)
+    assert.equal(await mlnToken.balanceOf(accounts[0]), 10 ** 28)
   });
 });

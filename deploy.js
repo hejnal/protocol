@@ -16,8 +16,6 @@ const path = require('path');
 const solc = require('solc');
 const tokenInfo = require('./migrations/config/token_info.js');
 
-const outDir = path.join(__dirname, 'out');
-
 function main() {
   //addressBook = artifacts[NETWORK];
   if(conf.network === 'kovan') {
