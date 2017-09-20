@@ -1,3 +1,4 @@
+// provides a way to deploy and link contracts
 const api = require('./api.js').getApi();
 const artifactor = require('./artifactor');
 const conf = require('./conf.js');

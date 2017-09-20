@@ -1,14 +1,5 @@
 #!/usr/bin/env node
 
-//LOGIC
-
-//for each contract:
-// get the contract ABI and bytecode
-// deploy the contract
-// add to the artifact object
-//then:
-// modify the artifacts file
-
 const artifactor = require('./artifactor.js');
 const conf = require('./conf.js');    // TODO: specify alternative confs as CLI input?
 const deployer = require('./deployer.js');

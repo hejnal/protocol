@@ -1,3 +1,5 @@
+// get parity/eth API as js module
+// RPC calls detailed here: github.com/paritytech/parity/wiki/JSONRPC
 const Api = require('@parity/parity.js').Api;
 let api;
 

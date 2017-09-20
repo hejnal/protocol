@@ -49,7 +49,7 @@ function getAddress(name, network) {
   return artifacts[network][name];
 }
 
-// retrieve a parity.js contract abstraction
+// retrieve a parity.js contract abstraction, not connected to any deployment
 function getContract(name) {
   const abi = getAbi(name);
   return api.newContract(abi);
@@ -57,7 +57,7 @@ function getContract(name) {
 
 // retrieve a parity.js contract abstraction connected to a deployed contract
 function getLiveContract(name, network) {
-  const addr = getArtifact(name, network);
+  const addr = getAddress(name, network);
   const abi = getAbi(name);
   return api.newContract(abi, addr);
 }
