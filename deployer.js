@@ -1,9 +1,7 @@
 const api = require('./api.js').getApi();
 const artifactor = require('./artifactor');
 const conf = require('./conf.js');
-const fs = require('fs');
-const klawSync = require('klaw-sync');
-const path = require('path');
+const solc = require('solc');
 
 // contract name and filename needs to have same case-sensitive name
 function deploy(name, args) {

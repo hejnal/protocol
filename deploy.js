@@ -12,8 +12,6 @@
 const artifactor = require('./artifactor.js');
 const conf = require('./conf.js');    // TODO: specify alternative confs as CLI input?
 const deployer = require('./deployer.js');
-const path = require('path');
-const solc = require('solc');
 const tokenInfo = require('./migrations/config/token_info.js');
 
 function main() {

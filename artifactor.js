@@ -2,6 +2,7 @@
 const api = require('./api.js').getApi();
 const conf = require('./conf.js');
 const fs = require('fs');
+const klawSync = require('klaw-sync');
 const path = require('path');
 
 let artifacts;

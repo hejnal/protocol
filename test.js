@@ -1,11 +1,8 @@
 import 'babel-polyfill';
 
 const api = require('./api.js').getApi();
-const artifactor = require('./artifactor.js');
 const chai = require('chai');
 const deployer = require('./deployer');
-
-const net = 'test';
 
 describe('Assets', () => {
   let mlnToken;
