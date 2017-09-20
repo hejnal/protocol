@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "true",
+    "temp-test": "mocha --compilers js:babel-core/register test.js",
     "localnode": "parity --chain dev --rpcport 8545 --force-ui",
     "compile": "solcjs --abi $(find contracts/ -name '*.sol')",
     "delete": "find . -name '*.abi' -type f -delete ",
@@ -46,6 +47,7 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
+    "chai": "^4.1.2",
     "coveralls": "^2.13.1",
     "eslint": "^3.13.1",
     "eslint-config-airbnb": "^13.0.0",
@@ -56,6 +58,7 @@
     "eslint-plugin-react": "^6.8.0",
     "ethereumjs-testrpc": "^3.9.2",
     "js-sha256": "^0.3.2",
+    "mocha": "^3.5.3",
     "mocha-lcov-reporter": "^1.3.0",
     "solidity-coverage": "^0.2.1",
     "truffle": "3.4.4"
@@ -64,7 +67,6 @@
     "@parity/parity.js": "^1.8.11",
     "babel-core": "^6.20.0",
     "bignumber.js": "^2.4.0",
-    "chai": "^4.1.0",
     "es6-promise": "^4.1.1",
     "isomorphic-fetch": "^2.2.1",
     "klaw-sync": "^3.0.0",

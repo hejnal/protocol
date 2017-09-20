@@ -1,4 +1,5 @@
 const api = require('./api.js').getApi();
+const deployer = require('./deployer.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -28,10 +29,16 @@ function getArtifact(name, network) {
   return artifacts[network][name];
 }
 
+// retrieve a parity.js contract abstraction
+function getContract(name) {
+  const abi = deployer.getAbi(name);
+  return api.newContract(abi);
+}
+
 // retrieve a parity.js contract abstraction connected to a deployed contract
-function getContract(name, network) {
+function getLiveContract(name, network) {
   const addr = getArtifact(name, network);
-  const abi = fs.readFileSync(path.join(abiDir, name + '.abi'));
+  const abi = deployer.getAbi(name);
   return api.newContract(abi, addr);
 }
 
@@ -39,5 +46,6 @@ module.exports = {
   load,
   save,
   getArtifact,
-  getContract
+  getContract,
+  getLiveContract
 }

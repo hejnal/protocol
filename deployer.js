@@ -5,6 +5,8 @@ const fs = require('fs');
 const klawSync = require('klaw-sync');
 const path = require('path');
 
+const outDir = path.join(__dirname, 'out');
+
 // returns content of a contract file as Object
 function getSolcOutput(contract) {
   const reJson = new RegExp(`.*\/${contract}\.sol.json$`);
@@ -44,6 +46,8 @@ function link(fromContract, toContract) {
 }
 
 module.exports = {
+  getAbi,
+  getBytecode,
   deploy,
   link
 }
