@@ -1,3 +1,4 @@
+const api = require('./api.js').getApi();
 const artifactor = require('./artifactor');
 const conf = require('./conf.js');
 const fs = require('fs');

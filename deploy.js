@@ -10,16 +10,13 @@
 // modify the artifacts file
 
 const artifactor = require('./artifactor.js');
+const conf = require('./conf.js');    // TODO: specify alternative confs as CLI input?
 const deployer = require('./deployer.js');
 const path = require('path');
 const solc = require('solc');
 const tokenInfo = require('./migrations/config/token_info.js');
-const Api = require('@parity/parity.js').Api;
-const transport = new Api.Transport.Http('http://localhost:8545');
-const api = new Api(transport);
 
 const outDir = path.join(__dirname, 'out');
-const conf = require('./conf.js');    // TODO: specify alternative confs as CLI input?
 
 function main() {
   //addressBook = artifacts[NETWORK];

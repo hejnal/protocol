@@ -1,9 +1,6 @@
+const api = require('./api.js').getApi();
 const fs = require('fs');
 const path = require('path');
-
-const Api = require('@parity/parity.js').Api;
-const transport = new Api.Transport.Http('http://localhost:8545');
-const api = new Api(transport);
 
 const artifactHandle = path.join(__dirname, 'artifacts.json');
 
