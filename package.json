@@ -8,7 +8,7 @@
   "scripts": {
     "test": "true",
     "temp-test": "mocha --compilers js:babel-core/register test.js",
-    "localnode": "parity --chain dev --rpcport 8545 --force-ui",
+    "localnode": "./scripts/devchain.sh",
     "compile": "solcjs --abi $(find contracts/ -name '*.sol')",
     "delete": "find . -name '*.abi' -type f -delete ",
     "lint": "eslint .",
