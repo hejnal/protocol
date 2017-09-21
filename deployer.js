@@ -10,7 +10,8 @@ function deploy(name, args) {
   const abi = artifactor.getAbi(name);
   const bytecode = artifactor.getBytecode(name);
   const contract = api.newContract(abi);
-  return contract.deploy({data: bytecode}, args);
+  return contract.deploy({data: bytecode}, args)
+  .catch(err => console.log(err.stack));
 }
 
 //XXX: link using this until dapp does it by default (dapphub/dapp#55)
