@@ -9,7 +9,7 @@ async function main() {
   const opts = {from: accounts[0], gas: 7000000};
   //addressBook = artifacts[NETWORK];
   if(conf.network === 'kovan') {
-    try {
+    try { // TODO: clean up below lines with default options and automatic address storing
       let artifacts = artifactor.load();
       let addressBook = artifacts;
       const mlnAddr = tokenInfo[conf.network].find(t => t.symbol === 'MLN-T').address;
@@ -21,8 +21,20 @@ async function main() {
       addressBook['Sphere'] = sphere._address;
       const participation = await deployer.deploy('Participation', [], opts);
       addressBook['Participation'] = participation._address;
-      // TODO: link libraries with Vault and Version
-      //  deployer.link('rewards', 'Version');
+      const riskMgmt = await deployer.deploy('RMMakeOrders', [], opts);
+      addressBook['RMMakeOrders'] = riskMgmt._address;
+      const governance = await deployer.deploy('Governance', [mlnAddr], opts);
+      addressBook['Governance'] = governance._address;
+      const rewards = await deployer.deploy('rewards', [], opts);
+      addressBook['rewards'] = rewards._address;
+      const simpleAdapter = await deployer.deploy('simpleAdapter', [], opts);
+      addressBook['simpleAdapter'] = simpleAdapter._address;
+      deployer.link('rewards', rewards._address, 'Fund');
+      deployer.link('simpleAdapter', simpleAdapter._address, 'Fund');
+      deployer.link('rewards', rewards._address, 'Version');
+      deployer.link('simpleAdapter', simpleAdapter._address, 'Version');
+      const version = await deployer.deploy('Version', [mlnAddr], opts);
+      addressBook['Version'] = version._address;
       // TODO: register assets
       //artifacts[conf.network] = addressBook;
       //artifactor.save(artifacts);

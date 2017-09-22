@@ -22,14 +22,19 @@ function save(artifacts) {
   fs.writeFileSync(conf.artifacts, JSON.stringify(artifacts))
 }
 
+// returns path for a contract name
+function getPathForContract(name) {
+  const reJson = new RegExp(`.*\/${name}\.sol.json$`);
+  return klawSync(conf.output, {filter: f => f.path.match(reJson)})[0].path;
+}
+
 // returns content of a contract json file as Object
-function getSolcOutput(contract) {
-  const reJson = new RegExp(`.*\/${contract}\.sol.json$`);
-  const reSol = new RegExp(`.*\/?${contract}\.sol$`);
-  const filePath = klawSync(conf.output, {filter: f => f.path.match(reJson)})[0].path;
+function getSolcOutput(contractName) {
+  const filePath = getPathForContract(contractName);
   const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const reSol = new RegExp(`.*\/?${contractName}\.sol$`);
   const sourcepath = content.sourceList.filter(e => e.match(reSol))[0];
-  return content.contracts[`${sourcepath}:${contract}`];
+  return content.contracts[`${sourcepath}:${contractName}`];
 }
 
 // returns string
@@ -37,11 +42,20 @@ function getBytecode(contract) {
   return getSolcOutput(contract).bin;
 }
 
+// change the bytecode in the contract's JSON file (used for linking libs)
+function setBytecode(contractName, bytecode) {
+  const filepath = getPathForContract(contractName);
+  const content = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+  const reSol = new RegExp(`.*\/?${contractName}\.sol$`);
+  const sourcepath = content.sourceList.filter(e => e.match(reSol))[0];
+  content.contracts[`${sourcepath}:${contractName}`].bin = bytecode;
+  fs.writeFileSync(filepath, JSON.stringify(content));
+}
+
 // returns Object
 function getAbi(contract) {
   return JSON.parse(getSolcOutput(contract).abi);
 }
-
 
 // retrieve a contract's artifact object from loaded artifacts
 function getAddress(name, network) {
@@ -67,7 +81,10 @@ module.exports = {
   save,
   getAbi,
   getBytecode,
+  setBytecode,
   getAddress,
   getContract,
-  getLiveContract
+  getLiveContract,
+  getSolcOutput,
+  getPathForContract
 }
