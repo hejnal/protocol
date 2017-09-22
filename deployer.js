@@ -1,25 +1,25 @@
 // provides a way to deploy and link contracts
-const api = require('./api.js').getApi();
+const web3 = require('./api.js').getWeb3Api();
 const artifactor = require('./artifactor');
 const conf = require('./conf.js');
 const solc = require('solc');
 
 // contract name and filename needs to have same case-sensitive name
-function deploy(name, args) {
-  if(args === undefined) args = [];
+function deploy(name, constructorArgs, opts) {
+  console.log(`Deploying ${name}`);
+  if(constructorArgs === undefined) constructorArgs = [];
   const abi = artifactor.getAbi(name);
   const bytecode = artifactor.getBytecode(name);
-  const contract = api.newContract(abi);
-  return contract.deploy({data: bytecode}, args)
-  .catch(err => console.log(err.stack));
+  const contract = new web3.eth.Contract(abi);
+  return contract.deploy({data: '0x' + bytecode, arguments: constructorArgs}).send(opts);
 }
 
 //XXX: link using this until dapp does it by default (dapphub/dapp#55)
-function link(fromContract, toContract) {
-  const libAddr = artifactor.getAddress(toContract, conf.network);
-  let bytecode = artifactor.getBytecode(fromContract);
+function link(libName, toContractName) {
+  const libAddr = artifactor.getAddress(libName, conf.network);
+  let bytecode = artifactor.getBytecode(toContractName);
   const libs = {};
-  libs[toContract] = libAddr;
+  libs[libName] = libAddr;
   bytecode = solc.linkBytecode(bytecode, libs);
 }
 

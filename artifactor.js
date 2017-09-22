@@ -1,5 +1,5 @@
 // read artifacts (abi, bin, addresses) and write addresses
-const api = require('./api.js').getApi();
+const web3 = require('./api.js').getWeb3Api();
 const conf = require('./conf.js');
 const fs = require('fs');
 const klawSync = require('klaw-sync');
@@ -52,14 +52,14 @@ function getAddress(name, network) {
 // retrieve a parity.js contract abstraction, not connected to any deployment
 function getContract(name) {
   const abi = getAbi(name);
-  return api.newContract(abi);
+  return web3.newContract(abi);
 }
 
 // retrieve a parity.js contract abstraction connected to a deployed contract
 function getLiveContract(name, network) {
   const addr = getAddress(name, network);
   const abi = getAbi(name);
-  return api.newContract(abi, addr);
+  return web3.newContract(abi, addr);
 }
 
 module.exports = {
