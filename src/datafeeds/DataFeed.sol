@@ -16,8 +16,8 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
     // TYPES
 
     struct Data  {
-        uint timestamp;  // Timestamp of last price update of this asset
-        uint price;      // Price of asset quoted against `QUOTE_ASSET` * 10 ** decimals
+        uint timestamp; // Timestamp of last price update of this asset
+        uint price; // Price of asset quoted against `QUOTE_ASSET` * 10 ** decimals
     }
 
     // FIELDS
@@ -28,14 +28,15 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
     uint public INTERVAL; // Frequency of updates in seconds
     uint public VALIDITY; // Time in seconds data is considered valid
     // Function fields
+    // XXX: change to array, or make access clearer in update()
     mapping (uint => mapping(address => Data)) public dataHistory; // maps integers to asset addresses, which map to data structs
     uint public nextUpdateId;
     uint public lastUpdateTimestamp;
 
     // PRE, POST, INVARIANT CONDITIONS
 
-    function isDataSet(address ofAsset) constant returns (bool) { return dataHistory[getLastUpdateId()][ofAsset].timestamp > 0; }
-    function isDataValid(address ofAsset) constant returns (bool) { return now - dataHistory[getLastUpdateId()][ofAsset].timestamp <= VALIDITY; }
+    function isDataSet(address ofAsset) internal returns (bool) { return dataHistory[getLastUpdateId()][ofAsset].timestamp > 0; }
+    function isDataValid(address ofAsset) internal returns (bool) { return now - dataHistory[getLastUpdateId()][ofAsset].timestamp <= VALIDITY; }
     function isHistory(uint x) internal returns (bool) { return 0 <= x && x < nextUpdateId; }
 
     // CONSTANT METHODS
@@ -53,12 +54,32 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
     function getLastUpdateTimestamp() constant returns (uint) {
         return lastUpdateTimestamp;
     }
+    /// @notice Get asset specific information
+    /// @dev Pre: Asset has been initialised
+    /// @dev Post Returns boolean if data is valid
+    function isValid(address ofAsset)
+        constant
+        pre_cond(isDataSet(ofAsset))
+        returns (bool)
+    {
+        return now - dataHistory[getLastUpdateId()][ofAsset].timestamp <= VALIDITY;
+    }
+    function existsData(address sellAsset, address buyAsset)
+        constant
+        returns (bool)
+    {
+        return
+            isValid(sellAsset) && // Is tradeable asset (TODO cleaner) and datafeed delivering data
+            isValid(buyAsset) && // Is tradeable asset (TODO cleaner) and datafeed delivering data
+            (buyAsset == QUOTE_ASSET || sellAsset == QUOTE_ASSET) && // One asset must be QUOTE_ASSET
+            (buyAsset != QUOTE_ASSET || sellAsset != QUOTE_ASSET); // Pair must consists of diffrent assets
+    }
     function getDataHistory(address ofAsset, uint withStartId)
         constant
         pre_cond(isHistory(withStartId))
         returns (uint[1024], uint[1024])
     {
-        uint256 indexCounter;
+        uint indexCounter;
         uint[1024] memory timestamps;
         uint[1024] memory prices;
         while (indexCounter != 1024 || withStartId + indexCounter < nextUpdateId) {
@@ -71,44 +92,33 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
         return (timestamps, prices);
     }
 
-    // Get asset specific information
-    /// Pre: Asset has been initialised
-    /// Post: Returns boolean if data is valid
-    function isValid(address ofAsset)
-        constant
-        pre_cond(isDataSet(ofAsset))
-        returns (bool)
-    {
-        return now - dataHistory[getLastUpdateId()][ofAsset].timestamp <= VALIDITY;
-    }
-
-    /// Pre: Asset has been initialised and is active
-    /// Post: Price of baseUnits(QUOTE_ASSET).ofAsset
+    /// @dev Asset has been initialised and is active
+    /// @return Price of baseUnits(QUOTE_ASSET).ofAsset
     function getPrice(address ofAsset)
         constant
         pre_cond(isDataSet(ofAsset))
         pre_cond(isDataValid(ofAsset))
-        returns (uint256)
+        returns (uint)
     {
         return dataHistory[getLastUpdateId()][ofAsset].price;
     }
 
-    /// Pre: Asset has been initialised and is active
-    /// Post: Inverted price of baseUnits(ofAsset).QUOTE_ASSET
+    /// @dev Asset has been initialised and is active
+    /// @return Inverted price of baseUnits(ofAsset).QUOTE_ASSET
     function getInvertedPrice(address ofAsset)
         constant
         pre_cond(isDataSet(ofAsset))
         pre_cond(isDataValid(ofAsset))
         returns (uint)
     {
-        return uint256(10 ** uint(getDecimals(ofAsset)))
+        return uint(10 ** uint(getDecimals(ofAsset)))
             .mul(10 ** uint(getDecimals(QUOTE_ASSET)))
             .div(getPrice(ofAsset));
     }
 
-    /// Pre: One of the address is equal to quote asset
-    /// Post: Price of baseUnits(ofBase).ofQuote
-    /// Post: either ofBase == QUOTE_ASSET or ofQuote == QUOTE_ASSET
+    /// @dev One of the address is equal to quote asset
+    /// @dev either ofBase == QUOTE_ASSET or ofQuote == QUOTE_ASSET
+    /// @return Price of baseUnits(ofBase).ofQuote
     function getReferencePrice(address ofBase, address ofQuote) constant returns (uint) {
         if (getQuoteAsset() == ofQuote) {
             getPrice(ofBase);
@@ -117,15 +127,30 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
         } else {
             throw; // Log Error: No suitable reference price availabe
         }
-     }
+    }
 
-    /// Pre: Asset has been initialised and is active
-    /// Post: Timestamp and price of asset, where last updated not longer than `VALIDITY` seconds ago
+    /// @notice Price of Order
+    /// @param sellQuantity Quantity in base units being sold of sellAsset
+    /// @param buyQuantity Quantity in base units being bhought of buyAsset
+    /// @return Price of baseUnits(QUOTE_ASSET).ofAsset
+    function getOrderPrice(
+        uint sellQuantity,
+        uint buyQuantity
+    )
+        constant returns (uint)
+    {
+        return buyQuantity
+            .mul(10 ** uint(getDecimals(QUOTE_ASSET)))
+            .div(sellQuantity);
+    }
+
+    /// @dev Pre: Asset has been initialised and is active
+    /// @dev Post Timestamp and price of asset, where last updated not longer than `VALIDITY` seconds ago
     function getData(address ofAsset)
         constant
         pre_cond(isDataSet(ofAsset))
         pre_cond(isDataValid(ofAsset))
-        returns (uint256, uint256)
+        returns (uint, uint)
     {
         return (
             dataHistory[getLastUpdateId()][ofAsset].timestamp,
@@ -133,26 +158,10 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
         );
     }
 
-    // CONSTANT METHODS - ACCOUNTING
-
-    /// Pre: Decimals in assets must be equal to decimals in PriceFeed for all entries in Universe
-    /// Post: Gross asset value denominated in [base unit of referenceAsset]
-    function calcGav(address ofVault) constant returns (uint256 gav) {
-        for (uint256 i = 0; i < numRegisteredAssets(); ++i) {
-            address ofAsset = address(getRegisteredAssetAt(i));
-            uint256 assetHoldings = ERC20(ofAsset).balanceOf(ofVault); // Amount of asset base units this vault holds
-            uint256 assetPrice = getPrice(ofAsset);
-            uint256 assetDecimals = getDecimals(ofAsset);
-            // Sum up product of asset holdings of this vault and asset prices
-            gav = gav.add(assetHoldings.mul(assetPrice).div(10 ** uint(assetDecimals)));
-            PortfolioContent(ofVault, assetHoldings, assetPrice, assetDecimals);
-        }
-    }
-
     // NON-CONSTANT PUBLIC METHODS
 
-    /// Pre: Define and register a quote asset against which all prices are measured/based against
-    /// Post: Price Feed contract w Backup Owner
+    /// @dev Pre: Define and register a quote asset against which all prices are measured/based against
+    /// @dev Post Price Feed contract w Backup Owner
     function DataFeed(
         address ofQuoteAsset, // Inital entry in asset registrar contract is Melon (QUOTE_ASSET)
         uint interval,
@@ -163,8 +172,8 @@ contract DataFeed is DataFeedInterface, AssetRegistrar {
         VALIDITY = validity;
     }
 
-    /// Pre: Only Owner; Same sized input arrays
-    /// Post: Update price of asset relative to QUOTE_ASSET
+    /// @dev Pre: Only Owner; Same sized input arrays
+    /// @dev Post Update price of asset relative to QUOTE_ASSET
     /** Ex:
      *  Let QUOTE_ASSET == MLN (base units), let asset == EUR-T,
      *  let Value of 1 EUR-T := 1 EUR == 0.080456789 MLN
